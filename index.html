@@ -36,6 +36,32 @@
   .leg-line { width: 28px; height: 3px; border-radius: 1px; flex-shrink: 0; }
   .leg-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
   #coords { color: #c47b00; font-size: 10px; margin-top: 6px; border-top: 1px solid #eee; padding-top: 6px; }
+  #sidebar-tab { display: none; }
+  #sidebar-inner { display: flex; flex-direction: column; gap: 12px; flex: 1; }
+  @media (max-width: 640px) {
+    #main { position: relative; }
+    #map { position: absolute; inset: 0; }
+    #sidebar {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      width: 100% !important; max-width: 100% !important;
+      height: 72vh; padding: 0; border-left: none;
+      overflow: hidden; z-index: 1000;
+      transform: translateY(calc(100% - 48px));
+      transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.18);
+    }
+    #sidebar.open { transform: translateY(0); }
+    #sidebar-tab {
+      display: flex; align-items: center; justify-content: center;
+      height: 48px; flex-shrink: 0;
+      background: #c47b00; color: #fff;
+      font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+      cursor: pointer; user-select: none;
+      border-radius: 12px 12px 0 0;
+    }
+    #sidebar-inner { overflow-y: auto; flex: 1; min-height: 0; padding: 12px; }
+    #resize-handle { display: none; }
+  }
 </style>
 </head>
 <body>
@@ -47,17 +73,20 @@
   <div id="map"></div>
   <div id="sidebar">
     <div id="resize-handle"></div>
-    <div>
-      <h3>Eclipse Timeline</h3>
-      <img src="Eclipse_Timeline.png" alt="Eclipse timeline"/>
-    </div>
-    <div>
-      <h3>Map Key</h3>
-      <div class="leg-row"><div class="leg-dot" style="background:#e03030"></div> Viewpoint (drag)</div>
-      <div class="leg-row"><div class="leg-line" style="background:#2196f3"></div> Start · 19:16 · 274°</div>
-      <div class="leg-row"><div class="leg-line" style="background:#e67e00"></div> Maximum · 20:11 · 284°</div>
-      <div class="leg-row"><div class="leg-line" style="background:#c0392b"></div> End · 21:03 · 294°</div>
-      <div id="coords">52°23′54.1″N 4°53′28.8″E</div>
+    <div id="sidebar-tab">▲ &nbsp; ECLIPSE INFO &nbsp; ▲</div>
+    <div id="sidebar-inner">
+      <div>
+        <h3>Eclipse Timeline</h3>
+        <img src="Eclipse_Timeline.png" alt="Eclipse timeline"/>
+      </div>
+      <div>
+        <h3>Map Key</h3>
+        <div class="leg-row"><div class="leg-dot" style="background:#e03030"></div> Viewpoint (drag)</div>
+        <div class="leg-row"><div class="leg-line" style="background:#2196f3"></div> Start · 19:16 · 274°</div>
+        <div class="leg-row"><div class="leg-line" style="background:#e67e00"></div> Maximum · 20:11 · 284°</div>
+        <div class="leg-row"><div class="leg-line" style="background:#c0392b"></div> End · 21:03 · 294°</div>
+        <div id="coords">52°23′54.1″N 4°53′28.8″E</div>
+      </div>
     </div>
   </div>
 </div>
@@ -249,6 +278,14 @@ window.addEventListener('touchmove', e => {
   map.invalidateSize();
 }, { passive: false });
 window.addEventListener('touchend', () => { dragging = false; map.invalidateSize(); });
+
+// Mobile sidebar toggle
+const sidebarTab = document.getElementById('sidebar-tab');
+sidebarTab.addEventListener('click', () => {
+  const open = sidebar.classList.toggle('open');
+  sidebarTab.textContent = open ? '▼  ECLIPSE INFO  ▼' : '▲  ECLIPSE INFO  ▲';
+  map.invalidateSize();
+});
 </script>
 </body>
 </html>
