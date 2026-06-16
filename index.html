@@ -36,6 +36,10 @@
   .leg-line { width: 28px; height: 3px; border-radius: 1px; flex-shrink: 0; }
   .leg-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
   #coords { color: #c47b00; font-size: 10px; margin-top: 6px; border-top: 1px solid #eee; padding-top: 6px; }
+  #time-bar { padding: 5px 16px; background: #fff; border-bottom: 1px solid #ddd; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  #time-bar-lbl { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: #c47b00; white-space: nowrap; }
+  #time-slider { flex: 1; accent-color: #c47b00; cursor: pointer; }
+  #time-disp { font-size: 10px; color: #555; letter-spacing: 0.5px; white-space: nowrap; min-width: 140px; text-align: right; }
   #sidebar-tab { display: none; }
   #sidebar-inner { display: flex; flex-direction: column; gap: 12px; flex: 1; }
   @media (max-width: 640px) {
@@ -66,6 +70,16 @@
 <div id="header">
   <h1>Eclipse Viewing · 12 Aug 2026</h1>
   <p>Partial solar eclipse · 88% coverage</p>
+</div>
+<div id="time-bar">
+  <span id="time-bar-lbl">Sun</span>
+  <input type="range" id="time-slider" min="0" max="150" step="1" value="0" list="time-ticks">
+  <datalist id="time-ticks">
+    <option value="16"></option>
+    <option value="70"></option>
+    <option value="123"></option>
+  </datalist>
+  <span id="time-disp">19:00</span>
 </div>
 <div id="main">
   <div id="map"></div>
@@ -114,6 +128,9 @@ function toDMS(deg, isLat) {
 }
 
 let rayGroup = L.layerGroup().addTo(map);
+let sunLayer = L.layerGroup().addTo(map);
+let sliderVal = 0;
+const BASE_UTC = Date.UTC(2026, 7, 12, 17, 0, 0); // 12 Aug 2026 19:00 CEST
 
 const phases = [
   { az: 274, color: '#2196f3', weight: 2.5, dash: '8,5', label: 'START',
@@ -217,6 +234,52 @@ function drawRays(origin) {
   });
 }
 
+function sunPos(date, lat, lng) {
+  const rad = Math.PI / 180;
+  const d = date.valueOf() / 86400000 - 0.5 + 2440588 - 2451545;
+  const lw = -rad * lng, phi = rad * lat;
+  const M = rad * (357.5291 + 0.98560028 * d);
+  const L = M + rad * (1.9148 * Math.sin(M) + 0.02 * Math.sin(2*M) + 0.0003 * Math.sin(3*M)) + rad * 102.9372 + Math.PI;
+  const e = rad * 23.4397;
+  const dec = Math.asin(Math.sin(L) * Math.sin(e));
+  const ra = Math.atan2(Math.sin(L) * Math.cos(e), Math.cos(L));
+  const H = (rad * (280.16 + 360.9856235 * d) - lw) - ra;
+  return {
+    az:  ((Math.atan2(Math.sin(H), Math.cos(H) * Math.sin(phi) - Math.tan(dec) * Math.cos(phi)) * 180/Math.PI) + 180 + 360) % 360,
+    alt: Math.asin(Math.sin(phi) * Math.sin(dec) + Math.cos(phi) * Math.cos(dec) * Math.cos(H)) * 180/Math.PI
+  };
+}
+
+function minToTimeStr(m) {
+  const t = 19 * 60 + m;
+  return `${String(Math.floor(t/60)).padStart(2,'0')}:${String(t%60).padStart(2,'0')}`;
+}
+
+function updateSunRay(val) {
+  sliderVal = val;
+  sunLayer.clearLayers();
+  const {az, alt} = sunPos(new Date(BASE_UTC + val * 60000), VIEW[0], VIEW[1]);
+  const timeStr = minToTimeStr(val);
+  document.getElementById('time-disp').textContent = `${timeStr} · ${az.toFixed(0)}° · ${alt.toFixed(1)}°`;
+  const above = alt >= 0;
+  const end = azToLatLng(VIEW, az, R);
+  L.polyline([VIEW, end], {
+    color: '#f0a500', weight: above ? 3 : 2,
+    opacity: above ? 0.9 : 0.3, dashArray: above ? null : '5,4', interactive: false
+  }).addTo(sunLayer);
+  if (above) {
+    let textRot = az - 90;
+    if (az > 180) textRot = az - 270;
+    L.marker(azToLatLng(VIEW, az, R * 0.58), {
+      icon: L.divIcon({
+        className: '',
+        html: `<div style="font-family:'Courier New';font-size:10px;font-weight:bold;color:#c47b00;white-space:nowrap;transform:translate(-50%,-50%) rotate(${textRot}deg);text-shadow:1px 1px 0 #fff,-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff;letter-spacing:1.5px">${timeStr}</div>`,
+        iconAnchor: [0,0]
+      }), interactive: false
+    }).addTo(sunLayer);
+  }
+}
+
 // Draggable viewpoint marker
 const marker = L.marker(VIEW, {
   draggable: true,
@@ -233,12 +296,14 @@ marker.on('drag', e => {
   const ll = e.target.getLatLng();
   VIEW = [ll.lat, ll.lng];
   drawRays(VIEW);
+  updateSunRay(sliderVal);
   document.getElementById('coords').textContent = `${toDMS(ll.lat, true)} ${toDMS(ll.lng, false)}`;
 });
 marker.on('dragend', e => {
   const ll = e.target.getLatLng();
   VIEW = [ll.lat, ll.lng];
   drawRays(VIEW);
+  updateSunRay(sliderVal);
 });
 
 // Resizable sidebar
@@ -284,6 +349,16 @@ sidebarTab.addEventListener('click', () => {
   sidebarTab.textContent = open ? '▼  ECLIPSE INFO  ▼' : '▲  ECLIPSE INFO  ▲';
   map.invalidateSize();
 });
+
+// Time slider — set max to ~20 min past sunset, then init
+const timeSlider = document.getElementById('time-slider');
+let sunsetMin = 150;
+for (let m = 100; m <= 180; m++) {
+  if (sunPos(new Date(BASE_UTC + m * 60000), VIEW[0], VIEW[1]).alt < 0) { sunsetMin = m + 20; break; }
+}
+timeSlider.max = sunsetMin;
+timeSlider.addEventListener('input', e => updateSunRay(+e.target.value));
+updateSunRay(0);
 </script>
 </body>
 </html>
