@@ -36,10 +36,15 @@
   .leg-line { width: 28px; height: 3px; border-radius: 1px; flex-shrink: 0; }
   .leg-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
   #coords { color: #c47b00; font-size: 10px; margin-top: 6px; border-top: 1px solid #eee; padding-top: 6px; }
-  #time-bar { padding: 5px 16px; background: #fff; border-bottom: 1px solid #ddd; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  #time-bar { padding: 6px 16px 4px; background: #fff; border-bottom: 1px solid #ddd; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
   #time-bar-lbl { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: #c47b00; white-space: nowrap; }
-  #time-slider { flex: 1; accent-color: #c47b00; cursor: pointer; }
-  #time-disp { font-size: 10px; color: #555; letter-spacing: 0.5px; white-space: nowrap; min-width: 140px; text-align: right; }
+  #slider-wrap { flex: 1; display: flex; flex-direction: column; gap: 1px; }
+  #time-slider { width: 100%; accent-color: #c47b00; cursor: pointer; }
+  #slider-ticks { position: relative; height: 18px; pointer-events: none; }
+  .stick { position: absolute; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 1px; }
+  .stick-line { width: 2px; height: 5px; border-radius: 1px; }
+  .stick-lbl { font-size: 8px; font-family: 'Courier New', monospace; font-weight: bold; white-space: nowrap; letter-spacing: 0.5px; text-transform: uppercase; }
+  #time-disp { font-size: 14px; font-weight: bold; color: #c47b00; white-space: nowrap; min-width: 140px; text-align: right; letter-spacing: 0.5px; }
   #sidebar-tab { display: none; }
   #sidebar-inner { display: flex; flex-direction: column; gap: 12px; flex: 1; }
   @media (max-width: 640px) {
@@ -73,12 +78,23 @@
 </div>
 <div id="time-bar">
   <span id="time-bar-lbl">Sun</span>
-  <input type="range" id="time-slider" min="0" max="150" step="1" value="0" list="time-ticks">
-  <datalist id="time-ticks">
-    <option value="16"></option>
-    <option value="70"></option>
-    <option value="123"></option>
-  </datalist>
+  <div id="slider-wrap">
+    <input type="range" id="time-slider" min="0" max="150" step="1" value="0">
+    <div id="slider-ticks">
+      <div class="stick" data-min="16" style="color:#2196f3">
+        <div class="stick-line" style="background:#2196f3"></div>
+        <div class="stick-lbl">19:16</div>
+      </div>
+      <div class="stick" data-min="70" style="color:#e67e00">
+        <div class="stick-line" style="background:#e67e00"></div>
+        <div class="stick-lbl">20:10</div>
+      </div>
+      <div class="stick" data-min="123" style="color:#c0392b">
+        <div class="stick-line" style="background:#c0392b"></div>
+        <div class="stick-lbl">21:03</div>
+      </div>
+    </div>
+  </div>
   <span id="time-disp">19:00</span>
 </div>
 <div id="main">
@@ -357,6 +373,9 @@ for (let m = 100; m <= 180; m++) {
   if (sunPos(new Date(BASE_UTC + m * 60000), VIEW[0], VIEW[1]).alt < 0) { sunsetMin = m + 20; break; }
 }
 timeSlider.max = sunsetMin;
+document.querySelectorAll('.stick').forEach(el => {
+  el.style.left = (+el.dataset.min / sunsetMin * 100) + '%';
+});
 timeSlider.addEventListener('input', e => updateSunRay(+e.target.value));
 updateSunRay(0);
 </script>
