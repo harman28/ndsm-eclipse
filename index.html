@@ -80,7 +80,7 @@
     <p>Partial solar eclipse · 88% coverage</p>
   </div>
   <div id="header-right">
-    <div id="coords">52°23′54.1″N 4°53′28.8″E</div>
+    <div id="coords">Viewpoint: 52°23′54.1″N 4°53′28.8″E</div>
     <a id="directions-link" href="https://www.google.com/maps/dir/?api=1&destination=52.3983611,4.8913333" target="_blank" rel="noopener">Directions →</a>
   </div>
 </div>
@@ -320,7 +320,7 @@ marker.on('drag', e => {
   VIEW = [ll.lat, ll.lng];
   drawRays(VIEW);
   updateSunRay(sliderVal);
-  document.getElementById('coords').textContent = `${toDMS(ll.lat, true)} ${toDMS(ll.lng, false)}`;
+  document.getElementById('coords').textContent = `Viewpoint: ${toDMS(ll.lat, true)} ${toDMS(ll.lng, false)}`;
   document.getElementById('directions-link').href = `https://www.google.com/maps/dir/?api=1&destination=${ll.lat},${ll.lng}`;
 });
 marker.on('dragend', e => {
