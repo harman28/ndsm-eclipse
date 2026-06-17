@@ -203,15 +203,13 @@ function drawRays(origin) {
     L.polyline([azToLatLng(origin, az, R - tickLen), azToLatLng(origin, az, R)], {
       color: isMajor ? '#555' : '#aaa', weight: isMajor ? 2 : 1, interactive: false
     }).addTo(rayGroup);
-    if (!isMajor) {
-      L.marker(azToLatLng(origin, az, R + 0.00065), {
-        icon: L.divIcon({
-          className: '',
-          html: `<div style="color:#777;font-size:9px;font-family:'Courier New';transform:translate(-50%,-50%);font-weight:bold;white-space:nowrap">${az}°</div>`,
-          iconAnchor: [0,0]
-        }), interactive: false
-      }).addTo(rayGroup);
-    }
+    L.marker(azToLatLng(origin, az, R + 0.00065), {
+      icon: L.divIcon({
+        className: '',
+        html: `<div style="color:#777;font-size:9px;font-family:'Courier New';transform:translate(-50%,-50%);font-weight:bold;white-space:nowrap">${az}°</div>`,
+        iconAnchor: [0,0]
+      }), interactive: false
+    }).addTo(rayGroup);
   }
 
   // Cardinal labels
