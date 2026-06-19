@@ -57,6 +57,88 @@
   #time-disp .td-detail { font-size: 9px; font-weight: bold; line-height: 1.5; text-align: right; margin-left: 4px; }
   #sidebar-tab { display: none; }
   #sidebar-inner { display: flex; flex-direction: column; gap: 12px; flex: 1; }
+  #interest-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  #interest-overlay.hidden { display: none; }
+  #interest-card {
+    background: #fff;
+    max-width: 420px;
+    width: 100%;
+    padding: 22px 20px 18px;
+    border-radius: 6px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+  }
+  #interest-card h2 { font-size: 14px; letter-spacing: 1.5px; text-transform: uppercase; color: #c47b00; margin-bottom: 8px; }
+  #interest-card p { font-size: 11px; color: #444; line-height: 1.6; margin-bottom: 12px; }
+  #interest-card input, #interest-card textarea {
+    width: 100%;
+    padding: 9px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    background: #fafaf7;
+    color: #222;
+    margin-bottom: 8px;
+    display: block;
+  }
+  #interest-card textarea { resize: vertical; }
+  #interest-card button {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    background: #c47b00;
+    color: #fff;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+  #interest-close {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #999;
+    font-size: 36px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 4px 8px;
+    font-family: 'Courier New', monospace;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  #interest-close:hover { color: #111; }
+  #reopen-interest {
+    position: fixed;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1500;
+    background: #f5f5f0;
+    color: #c47b00;
+    border: 1px solid #ddd;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    font-weight: bold;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
   @media (max-width: 640px) {
     #header { flex-direction: column; align-items: stretch; gap: 0; padding-left: 0; padding-right: 0; }
     #header > div:first-child { padding: 0 16px 8px; }
@@ -83,10 +165,25 @@
     }
     #sidebar-inner { overflow-y: auto; flex: 1; min-height: 0; padding: 12px; }
     #resize-handle { display: none; }
+    #reopen-interest { top: 10px; right: 12px; left: auto; transform: none; padding: 5px 9px; }
   }
 </style>
 </head>
 <body>
+<div id="interest-overlay">
+  <div id="interest-card" style="position:relative">
+    <span id="interest-close" role="button" tabindex="0" aria-label="Close">×</span>
+    <h2>Eclipse Chess · 12 Aug 2026</h2>
+    <p>Casual blitz by the water during the eclipse window (19:16–21:03 CEST).<br>No entry fee. Bring a drink. Weather-permitting.</p>
+    <form id="interest-form" action="https://formspree.io/f/mrevnpaq" method="POST">
+      <input name="name" placeholder="Your name (optional)" autocomplete="off" />
+      <input name="email" type="email" placeholder="Email address" required autocomplete="off" />
+      <textarea name="note" placeholder="Anything else you'd like to share" rows="2"></textarea>
+      <button type="submit">COUNT ME IN</button>
+    </form>
+  </div>
+</div>
+  <button id="reopen-interest">COUNT ME IN</button>
 <div id="header">
   <div>
     <h1>Eclipse Viewing · 12 Aug 2026</h1>
@@ -398,5 +495,37 @@ document.querySelectorAll('.stick').forEach(el => {
 timeSlider.addEventListener('input', e => updateSunRay(+e.target.value));
 updateSunRay(0);
 </script>
+<script>
+(function(){
+  const overlay = document.getElementById('interest-overlay');
+  const card = document.getElementById('interest-card');
+  const close = document.getElementById('interest-close');
+  const reopen = document.getElementById('reopen-interest');
+  const form = document.getElementById('interest-form');
+  if (!overlay || !close || !reopen) return;
+  const openOverlay = () => { overlay.classList.remove('hidden'); };
+  const closeOverlay = () => { overlay.classList.add('hidden'); };
+  close.addEventListener('click', e => { e.stopPropagation(); closeOverlay(); });
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) closeOverlay();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeOverlay();
+  });
+  form.addEventListener('submit', () => {
+    try { localStorage.setItem('ndsm-interest-dismissed', '1'); } catch (e) {}
+    closeOverlay();
+  });
+  try {
+    if (localStorage.getItem('ndsm-interest-dismissed')) {
+      closeOverlay();
+    }
+  } catch (e) {}
+  // Mobile: reopen button at bottom right
+  const reopenBtn = document.getElementById('reopen-interest');
+  if (reopenBtn) reopenBtn.addEventListener('click', openOverlay);
+})();
+</script>
+<script defer data-domain="ndsm-eclipse" src="https://plausible.io/js/script.js"></script>
 </body>
 </html>
