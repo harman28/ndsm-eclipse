@@ -180,6 +180,7 @@
       <input name="email" type="email" placeholder="Email address" required autocomplete="off" />
       <textarea name="note" placeholder="Anything else you'd like to share" rows="2"></textarea>
       <button type="submit">COUNT ME IN</button>
+      <p id="interest-success" style="display:none;font-size:15px;font-weight:bold;color:#1b5e20;margin-top:8px;padding:8px 10px;background:#e8f5e9;border:1px solid #c8e6c9;border-radius:4px">You're on the list — see you at the water's edge.</p>
     </form>
   </div>
 </div>
@@ -512,9 +513,14 @@ updateSunRay(0);
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') closeOverlay();
   });
-  form.addEventListener('submit', () => {
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const btn = form.querySelector('button[type="submit"]');
+    const success = document.getElementById('interest-success');
+    if (success) success.style.display = 'block';
+    if (btn) btn.disabled = true;
     try { localStorage.setItem('ndsm-interest-dismissed', '1'); } catch (e) {}
-    closeOverlay();
+    setTimeout(() => closeOverlay(), 2000);
   });
   try {
     if (localStorage.getItem('ndsm-interest-dismissed')) {
@@ -526,6 +532,11 @@ updateSunRay(0);
   if (reopenBtn) reopenBtn.addEventListener('click', openOverlay);
 })();
 </script>
-<script defer data-domain="ndsm-eclipse" src="https://plausible.io/js/script.js"></script>
+<!-- Privacy-friendly analytics by Plausible -->
+<script async src="https://plausible.io/js/pa-JcbCJuS3eHyEe4xiDN8zY.js"></script>
+<script>
+  window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
+  plausible.init()
+</script>
 </body>
 </html>
